@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CLIENT_ID</key>
+    <string>xxxxxxxxxxxxxxxxxxxxx</string>
+    <key>TENANT_DOMAIN</key>
+    <string>xxxxxxxxx</string>
+    <key>POLICY_NAME</key>
+    <string>B2C_1_signupsignin1</string>
+    <key>REDIRECT_URI</key>
+    <string>msauth://</string>
+    <key>AUTHORITY_URL</key>
+    <string>https://xxxxxxx.ciamlogin.com/xxxxxxxxxxxxxxxxxxxxx</string>
+    <key>SCOPES</key>
+    <array>
+        <string>https://graph.microsoft.com/User.Read</string>
+    </array>
+</dict>
+</plist>
