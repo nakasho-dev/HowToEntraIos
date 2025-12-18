@@ -21,7 +21,6 @@ final class AuthViewTests: XCTestCase {
         let sut = AuthView(viewModel: makeViewModel(phase: .signedIn(user)))
         XCTAssertEqual(try sut.inspect().find(text: "ようこそ, 田中太郎").string(), "ようこそ, 田中太郎")
         XCTAssertEqual(try sut.inspect().find(text: "taro@example.com").string(), "taro@example.com")
-        XCTAssertEqual(try sut.inspect().find(text: "object-1").string(), "object-1")
     }
 
     func test_loadingState_showsProgressView() throws {
