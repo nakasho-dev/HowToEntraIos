@@ -75,6 +75,7 @@ enum MSALAuthenticatorError: LocalizedError {
     case missingAccount
     case removeAccountFailed
     case unknown
+    case interactionRequired
 
     var errorDescription: String? {
         switch self {
@@ -84,6 +85,8 @@ enum MSALAuthenticatorError: LocalizedError {
             return "アカウント削除に失敗しました"
         case .unknown:
             return "不明なエラーが発生しました"
+        case .interactionRequired:
+            return "再サインインが必要です"
         }
     }
 }

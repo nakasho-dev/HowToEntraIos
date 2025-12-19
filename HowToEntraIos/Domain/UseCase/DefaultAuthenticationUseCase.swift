@@ -18,4 +18,8 @@ struct DefaultAuthenticationUseCase: AuthenticationUseCase {
     func signOut() async throws {
         try await repository.signOut()
     }
+
+    func getAccessToken(for scopes: [String]) async throws -> String {
+        try await repository.getAccessToken(for: scopes)
+    }
 }

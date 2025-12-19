@@ -13,15 +13,6 @@ struct HowToEntraIosApp: App {
     private let viewModel: AuthViewModel
 
     init() {
-        // Enable MSAL logging
-        MSALGlobalConfig.loggerConfig.logLevel = .verbose
-        MSALGlobalConfig.loggerConfig.setLogCallback { (level, message, containsPII) in
-            if let message = message {
-                // Show all logs for debugging
-                print("MSAL [\(level)] PII=\(containsPII): \(message)")
-            }
-        }
-
         viewModel = AuthViewModel(useCase: HowToEntraIosApp.makeUseCase())
     }
 
@@ -51,4 +42,5 @@ private struct FailingAuthenticationRepository: AuthenticationRepository {
     func loadAccount() async throws -> AuthenticatedUser? { throw error }
     func signIn() async throws -> AuthenticatedUser { throw error }
     func signOut() async throws { throw error }
+    func getAccessToken(for scopes: [String]) async throws -> String { throw error }
 }

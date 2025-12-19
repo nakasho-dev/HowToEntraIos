@@ -1,0 +1,20 @@
+{
+  "version": 8,
+  "sources": {
+    "azure-maps-raster": {
+      "type": "raster",
+      "tiles": [
+        "https://atlas.microsoft.com/map/tile?api-version=2.0&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}&tileSize=256"
+      ],
+      "tileSize": 256
+    }
+  },
+  "layers": [
+    {
+      "id": "azure-maps-raster-layer",
+      "type": "raster",
+      "source": "azure-maps-raster",
+      "paint": {}
+    }
+  ]
+}

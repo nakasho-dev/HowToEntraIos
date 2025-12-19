@@ -4,10 +4,10 @@ import MSAL
 struct AuthenticationConfig: Decodable, Sendable {
     let clientId: String
     let tenantDomain: String
-    let policyName: String
+    let policyName: String?
     let redirectUri: String
     let scopes: [String]
-    let authorityUrlString: String?
+    let azureMapsClientId: String?
 
     private enum CodingKeys: String, CodingKey {
         case clientId = "CLIENT_ID"
@@ -15,14 +15,15 @@ struct AuthenticationConfig: Decodable, Sendable {
         case policyName = "POLICY_NAME"
         case redirectUri = "REDIRECT_URI"
         case scopes = "SCOPES"
-        case authorityUrlString = "AUTHORITY_URL"
+        case azureMapsClientId = "AZURE_MAPS_CLIENT_ID"
     }
 
     private var authorityURL: URL {
-        if let authorityUrlString, let url = URL(string: authorityUrlString) {
-            return url
+        if let policyName = policyName, !policyName.isEmpty {
+            return URL(string: "https://\(tenantDomain).b2clogin.com/\(tenantDomain).onmicrosoft.com/\(policyName)")!
+        } else {
+            return URL(string: "https://login.microsoftonline.com/\(tenantDomain)")!
         }
-        return URL(string: "https://\(tenantDomain).b2clogin.com/\(tenantDomain).onmicrosoft.com/\(policyName)")!
     }
 
     func makeApplicationConfig() throws -> MSALPublicClientApplicationConfig {
@@ -31,7 +32,13 @@ struct AuthenticationConfig: Decodable, Sendable {
         print("  redirectUri: \(redirectUri)")
         print("  authorityURL: \(authorityURL)")
 
-        let authority = try MSALAuthority(url: authorityURL)
+        let authority: MSALAuthority
+        if let policyName = policyName, !policyName.isEmpty {
+            authority = try MSALB2CAuthority(url: authorityURL)
+        } else {
+            authority = try MSALAADAuthority(url: authorityURL)
+        }
+        
         let config = MSALPublicClientApplicationConfig(clientId: clientId, redirectUri: redirectUri, authority: authority)
 
         print("DEBUG: MSAL config created successfully")

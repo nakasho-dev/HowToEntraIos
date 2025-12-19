@@ -51,7 +51,7 @@ struct AuthView: View {
 
     private func signedInView(_ user: AuthenticatedUser) -> some View {
         ZStack(alignment: .topLeading) {
-            MapView(styleURL: URL(string: "https://demotiles.maplibre.org/style.json")!, camera: $camera)
+            MapView(styleURL: mapStyleURL, camera: $camera)
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 16) {
@@ -88,6 +88,13 @@ struct AuthView: View {
                 .font(.body.monospaced())
         }
     }
+
+    private var mapStyleURL: URL {
+        if let url = Bundle.main.url(forResource: "azure-maps-style", withExtension: "json") {
+            return url
+        }
+        return URL(string: "https://demotiles.maplibre.org/style.json")!
+    }
 }
 
 #Preview {
@@ -104,4 +111,8 @@ private final class PreviewAuthenticationUseCase: AuthenticationUseCase {
     }
 
     func signOut() async throws { }
+
+    func getAccessToken(for scopes: [String]) async throws -> String {
+        return "dummy-access-token"
+    }
 }
