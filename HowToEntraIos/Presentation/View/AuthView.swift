@@ -55,13 +55,8 @@ struct AuthView: View {
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("ようこそ, \(user.displayName)")
-                        .font(.headline)
-                    Text(user.email)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                Text("ようこそ, \(user.displayName)")
+                    .font(.headline)
                 
                 Button(role: .destructive) {
                     Task { await viewModel.signOut() }
@@ -103,16 +98,16 @@ struct AuthView: View {
 
 private final class PreviewAuthenticationUseCase: AuthenticationUseCase {
     func loadAccount() async throws -> AuthenticatedUser? {
-        AuthenticatedUser(displayName: "Preview", email: "preview@example.com", objectId: "0000")
+        AuthenticatedUser(displayName: "Preview", objectId: "0000")
     }
 
     func signIn() async throws -> AuthenticatedUser {
-        AuthenticatedUser(displayName: "Preview", email: "preview@example.com", objectId: "0000")
+        AuthenticatedUser(displayName: "Preview", objectId: "0000")
     }
 
     func signOut() async throws { }
 
     func getAccessToken(for scopes: [String]) async throws -> String {
-        return "dummy-access-token"
+        "dummy-access-token"
     }
 }

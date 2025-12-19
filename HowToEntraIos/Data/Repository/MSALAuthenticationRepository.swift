@@ -16,13 +16,17 @@ struct MSALAuthenticationRepository: AuthenticationRepository {
         
         if let result = try? await authenticator.acquireTokenSilently(with: config.scopes) {
             print("DEBUG [loadAccount]: Silent token acquired successfully")
-            return makeUser(from: result.account)
+            return makeUser(from: result)
         }
         print("DEBUG [loadAccount]: Silent token acquisition failed, checking for existing accounts")
         
         if let account = try await authenticator.getAccounts().first {
             print("DEBUG [loadAccount]: Found existing account: \(account.username ?? "unknown")")
-            return AuthenticatedUser(displayName: account.username ?? "", email: account.username ?? "", objectId: account.identifier ?? "")
+            // アカウントのみの場合は、表示名が取得できないためusernameを使用
+            return AuthenticatedUser(
+                displayName: account.username ?? "",
+                objectId: account.identifier ?? ""
+            )
         }
         print("DEBUG [loadAccount]: No account found")
         return nil
@@ -40,7 +44,7 @@ struct MSALAuthenticationRepository: AuthenticationRepository {
         print("DEBUG [signIn]: Access token (first 50 chars): \(String(result.accessToken.prefix(50)))...")
         print("DEBUG [signIn]: Scopes granted: \(result.scopes)")
         
-        return makeUser(from: result.account)
+        return makeUser(from: result)
     }
 
     func signOut() async throws {
@@ -59,14 +63,12 @@ struct MSALAuthenticationRepository: AuthenticationRepository {
         print("DEBUG [getAccessToken]: Requested scopes = \(scopes)")
         
         do {
-            // まずサイレント取得を試みる
             print("DEBUG [getAccessToken]: Trying silent token acquisition...")
             let result = try await authenticator.acquireTokenSilently(with: scopes)
             print("DEBUG [getAccessToken]: Silent token acquired successfully")
             print("DEBUG [getAccessToken]: Access token (first 50 chars): \(String(result.accessToken.prefix(50)))...")
             return result.accessToken
         } catch {
-            // サイレント取得に失敗した場合は対話的取得を試みる
             print("DEBUG [getAccessToken]: Silent token acquisition failed")
             print("DEBUG [getAccessToken]: Error: \(error)")
             if let nsError = error as NSError? {
@@ -83,14 +85,24 @@ struct MSALAuthenticationRepository: AuthenticationRepository {
         }
     }
 
-    private func makeUser(from account: MSALAccount) -> AuthenticatedUser {
-        print("DEBUG [makeUser]: Creating user from account")
+    private func makeUser(from result: MSALResult) -> AuthenticatedUser {
+        let account = result.account
+        print("DEBUG [makeUser]: Creating user from MSALResult")
         print("DEBUG [makeUser]: username = \(account.username ?? "nil")")
         print("DEBUG [makeUser]: identifier = \(account.identifier ?? "nil")")
         
+        // IDトークンのクレームから表示名を取得
+        var displayName = account.username ?? ""
+        if let claims = account.accountClaims,
+           let name = claims["name"] as? String {
+            displayName = name
+            print("DEBUG [makeUser]: displayName from claims = \(name)")
+        } else {
+            print("DEBUG [makeUser]: No name claim found, using username")
+        }
+        
         return AuthenticatedUser(
-            displayName: account.username ?? "",
-            email: account.username ?? "",
+            displayName: displayName,
             objectId: account.identifier ?? ""
         )
     }
