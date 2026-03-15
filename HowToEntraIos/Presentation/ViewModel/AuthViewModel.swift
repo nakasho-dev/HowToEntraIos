@@ -62,7 +62,7 @@ final class AuthViewModel {
             try await useCase.signOut()
             print("DEBUG [AuthViewModel.signOut]: User signed out")
             state.phase = .signedOut
-            // サインアウト時にヘッダーをクリアする
+            AzureMapsAuthProtocol.reset()
             MLNNetworkConfiguration.sharedManager.sessionConfiguration = nil
         } catch {
             print("DEBUG [AuthViewModel.signOut]: Error: \(error)")
@@ -90,12 +90,8 @@ final class AuthViewModel {
             let token = try await useCase.getAccessToken(for: scopes)
             print("DEBUG [AuthViewModel.setupMapAuthentication]: Token acquired (first 50 chars): \(String(token.prefix(50)))...")
 
-            let sessionConfig = URLSessionConfiguration.default
-            sessionConfig.httpAdditionalHeaders = [
-                "Authorization": "Bearer \(token)",
-                "x-ms-client-id": azureMapsClientId
-            ]
-            MLNNetworkConfiguration.sharedManager.sessionConfiguration = sessionConfig
+            AzureMapsAuthProtocol.configure(token: token, clientId: azureMapsClientId)
+            MLNNetworkConfiguration.sharedManager.sessionConfiguration = AzureMapsAuthProtocol.makeSessionConfiguration()
             print("DEBUG [AuthViewModel.setupMapAuthentication]: MapLibre authentication configured for Azure Maps.")
         } catch {
             print("DEBUG [AuthViewModel.setupMapAuthentication]: Failed to setup map authentication")
