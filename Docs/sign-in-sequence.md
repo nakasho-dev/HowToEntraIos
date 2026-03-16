@@ -1,6 +1,6 @@
 # SignIn シーケンス図
 
-AuthView の SignIn ボタン押下から、MSAL ライブラリ経由で Microsoft Entra ID 認証を行い、
+SignedOutView の SignIn ボタン押下から、MSAL ライブラリ経由で Microsoft Entra ID 認証を行い、
 ユーザ情報を取得・表示するまでの流れを示す。
 Azure Maps 認証設定（`setupMapAuthentication`）については別図を参照。
 
@@ -12,6 +12,7 @@ MSAL SDK の `acquireToken` を呼び出すまでの流れ。
 ```mermaid
 sequenceDiagram
     actor User
+    participant SignedOut as SignedOutView
     participant View as AuthView
     participant VM as AuthViewModel
     participant UC as DefaultAuthenticationUseCase
@@ -19,7 +20,8 @@ sequenceDiagram
     participant Auth as MSALAuthenticator
     participant MSAL as MSALPublicClientApplication
 
-    User->>View: SignIn ボタンタップ
+    User->>SignedOut: SignIn ボタンタップ
+    SignedOut->>View: onSignIn() コールバック
     View->>VM: Task { await signIn() }
     Note over VM: state.isProcessing = true<br/>state.alert = nil
 
@@ -44,6 +46,7 @@ MSAL SDK が Entra ID と通信し、認証結果を受け取ってから
 ```mermaid
 sequenceDiagram
     actor User
+    participant SignedIn as SignedInOverlayView
     participant View as AuthView
     participant VM as AuthViewModel
     participant Repo as MSALAuthenticationRepository
@@ -69,7 +72,9 @@ sequenceDiagram
 
     Note over VM: state.phase = .signedIn(user)<br/>defer: state.isProcessing = false
     VM->>View: state 更新（Observation）
-    View->>User: ようこそ画面表示
+    Note over View: phase が .signedIn に変化<br/>→ SignedInOverlayView を表示
+    View->>SignedIn: user, isProcessing,<br/>selectedMapStyle, onSignOut を渡す
+    SignedIn->>User: ようこそ画面表示
 ```
 
 ## エラー系
@@ -83,6 +88,7 @@ sequenceDiagram
     participant MSAL as MSALPublicClientApplication
     participant Entra as Microsoft Entra ID
     participant View as AuthView
+    participant SignedOut as SignedOutView
     actor User
 
     Note over MSAL,Entra: ※ Part 1〜2 と同様に進行後
@@ -94,5 +100,6 @@ sequenceDiagram
 
     Note over VM: state.alert = AuthAlert(message:)<br/>state.phase = .signedOut<br/>defer: state.isProcessing = false
     VM->>View: state 更新（Observation）
+    Note over View: phase が .signedOut に変化<br/>→ SignedOutView を表示
     View->>User: エラーダイアログ表示
 ```
