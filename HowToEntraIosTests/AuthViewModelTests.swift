@@ -5,7 +5,7 @@ import XCTest
 final class AuthViewModelTests: XCTestCase {
 
     func test_loadAccount_whenRepositoryReturnsUser_transitionsToSignedIn() async throws {
-        let expectedUser = AuthenticatedUser(displayName: "Test User", email: "test@example.com", objectId: "object-id")
+        let expectedUser = AuthenticatedUser(displayName: "Test User", objectId: "object-id")
         let useCase = MockAuthenticationUseCase()
         useCase.loadAccountResult = .success(expectedUser)
         let viewModel = AuthViewModel(useCase: useCase)
@@ -31,7 +31,7 @@ final class AuthViewModelTests: XCTestCase {
     }
 
     func test_signIn_success_updatesStateAndClearsAlert() async throws {
-        let expectedUser = AuthenticatedUser(displayName: "User", email: "user@example.com", objectId: "1")
+        let expectedUser = AuthenticatedUser(displayName: "User", objectId: "1")
         let useCase = MockAuthenticationUseCase()
         useCase.signInResult = .success(expectedUser)
         let viewModel = AuthViewModel(useCase: useCase)
@@ -60,7 +60,7 @@ final class AuthViewModelTests: XCTestCase {
     }
 
     func test_signOut_success_returnsToSignedOut() async throws {
-        let user = AuthenticatedUser(displayName: "User", email: "user@example.com", objectId: "1")
+        let user = AuthenticatedUser(displayName: "User", objectId: "1")
         let useCase = MockAuthenticationUseCase()
         useCase.signOutError = nil
         let viewModel = AuthViewModel(useCase: useCase)
@@ -75,7 +75,7 @@ final class AuthViewModelTests: XCTestCase {
         let useCase = MockAuthenticationUseCase()
         useCase.signOutError = MockAuthenticationUseCase.MockError.signOutFailed
         let viewModel = AuthViewModel(useCase: useCase)
-        viewModel.state.phase = .signedIn(.init(displayName: "User", email: "user@example.com", objectId: "1"))
+        viewModel.state.phase = .signedIn(.init(displayName: "User", objectId: "1"))
 
         await viewModel.signOut()
 
@@ -114,5 +114,9 @@ private final class MockAuthenticationUseCase: AuthenticationUseCase {
         if let signOutError {
             throw signOutError
         }
+    }
+
+    func getAccessToken(for scopes: [String]) async throws -> String {
+        "mock-access-token"
     }
 }

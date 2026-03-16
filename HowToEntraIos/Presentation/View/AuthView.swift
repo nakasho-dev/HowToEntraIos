@@ -62,6 +62,68 @@ enum AzureMapStyle: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - SignedOutView
+
+struct SignedOutView: View {
+    let isProcessing: Bool
+    let onSignIn: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Microsoft Entra ID")
+                .font(.title)
+            Button {
+                onSignIn()
+            } label: {
+                Label("Sign In", systemImage: "person.crop.circle.badge.plus")
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(isProcessing)
+        }
+    }
+}
+
+// MARK: - SignedInOverlayView
+
+struct SignedInOverlayView: View {
+    let user: AuthenticatedUser
+    let isProcessing: Bool
+    @Binding var selectedMapStyle: AzureMapStyle
+    let onSignOut: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("ようこそ, \(user.displayName)")
+                .font(.headline)
+
+            Picker("地図スタイル", selection: $selectedMapStyle) {
+                ForEach(AzureMapStyle.allCases) { style in
+                    Text(style.displayName).tag(style)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.primary)
+            .padding(.vertical, 4)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Button(role: .destructive) {
+                onSignOut()
+            } label: {
+                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(isProcessing)
+        }
+        .padding()
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding()
+    }
+}
+
+// MARK: - AuthView
+
 struct AuthView: View {
     @Bindable var viewModel: AuthViewModel
     @State private var camera = MapViewCamera.center(CLLocationCoordinate2D(latitude: 35.66500, longitude: 139.73942), zoom: 16)
@@ -74,8 +136,10 @@ struct AuthView: View {
             case .loading:
                 ProgressView()
             case .signedOut:
-                signedOutView
-                    .padding()
+                SignedOutView(isProcessing: viewModel.state.isProcessing) {
+                    Task { await viewModel.signIn() }
+                }
+                .padding()
             case .signedIn(let user):
                 signedInView(user)
             }
@@ -95,56 +159,21 @@ struct AuthView: View {
         }
     }
 
-    private var signedOutView: some View {
-        VStack(spacing: 16) {
-            Text("Microsoft Entra ID")
-                .font(.title)
-            Button {
-                Task { await viewModel.signIn() }
-            } label: {
-                Label("Sign In", systemImage: "person.crop.circle.badge.plus")
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.state.isProcessing)
-        }
-    }
-
     private func signedInView(_ user: AuthenticatedUser) -> some View {
         ZStack(alignment: .topLeading) {
             MapView(styleURL: selectedMapStyle.styleURL, camera: $camera)
                 .ignoresSafeArea()
                 .id(mapKey)
-
-            VStack(alignment: .leading, spacing: 16) {
-                Text("ようこそ, \(user.displayName)")
-                    .font(.headline)
-                
-                Picker("地図スタイル", selection: $selectedMapStyle) {
-                    ForEach(AzureMapStyle.allCases) { style in
-                        Text(style.displayName).tag(style)
-                    }
-                }
-                .pickerStyle(.menu)
-                .tint(.primary)
-                .padding(.vertical, 4)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .onChange(of: selectedMapStyle) { _, _ in
                     mapKey = UUID()
                 }
-                
-                Button(role: .destructive) {
-                    Task { await viewModel.signOut() }
-                } label: {
-                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
-                }
-                .buttonStyle(.borderedProminent)
-                .disabled(viewModel.state.isProcessing)
-            }
-            .padding()
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding()
+
+            SignedInOverlayView(
+                user: user,
+                isProcessing: viewModel.state.isProcessing,
+                selectedMapStyle: $selectedMapStyle,
+                onSignOut: { Task { await viewModel.signOut() } }
+            )
         }
     }
 }
